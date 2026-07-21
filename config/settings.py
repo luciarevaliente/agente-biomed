@@ -3,5 +3,5 @@ from dotenv import load_dotenv
 
 load_dotenv()
 
-HUGGINGFACEHUB_API_TOKEN = os.getenv("HUGGINGFACEHUB_API_TOKEN")
-MODEL_ID = "meta-llama/Llama-3.1-8B-Instruct"
+GROQ_API_KEY = os.getenv("GROQ_API_KEY")
+MODEL_ID = "llama-3.1-8b-instant"

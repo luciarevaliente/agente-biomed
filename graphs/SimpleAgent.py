@@ -7,8 +7,9 @@ from langchain_core.messages import HumanMessage    # langchain_core.messages de
 from langgraph.graph import StateGraph, START, END  # StateGraph: Graph classs, START: special node (start of the graph), END: special node (end of the graph)
 from langgraph.graph.message import add_messages    # reducer: function that says to LangGraph how to update the msg list when a node returns a new message (sth) --> acumula en vez de reemplazar
 
-from langchain_huggingface import HuggingFaceEndpoint, ChatHuggingFace  # HuggingFaceEndpoint: class that allows to connect to a Hugging Face model endpoint; ChatHuggingFace: class that allows to connect to a Hugging Face chat model endpoint
-from config.settings import HUGGINGFACEHUB_API_TOKEN, MODEL_ID
+from langchain_groq import ChatGroq
+from config.settings import GROQ_API_KEY, MODEL_ID
+
 
 class State(TypedDict):
     """Represents the state of the agent, including its current position in the graph and any relevant information about the environment."""
@@ -17,13 +18,12 @@ class State(TypedDict):
 class SimpleAgent:
     """A simple agent that interacts with a language model through a state graph, processing user messages and generating responses."""
     def __init__(self):
-        llm = HuggingFaceEndpoint(
-            repo_id=MODEL_ID, 
-            huggingfacehub_api_token=HUGGINGFACEHUB_API_TOKEN,
-            max_new_tokens=512, # maximum number of tokens to generate in the output --> default=512
-            temperature=0.4, # most probable token is selected (0.0) vs more randomness (1.0)
+        self._llm = ChatGroq(
+                model=MODEL_ID,
+                api_key=GROQ_API_KEY,
+                temperature=0.4,
+                max_tokens=512,
             )
-        self._llm = ChatHuggingFace(llm=llm) # conversational wrapper
         self._graph = self._build_graph()
 
     def _build_graph(self):
