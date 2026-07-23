@@ -2,8 +2,9 @@
 from typing import Annotated            # e.g. Annotated[int, "Age"]
 from typing_extensions import TypedDict # define dictionaries with specific key-value types
 
-from langchain_core.messages import HumanMessage    # langchain_core.messages defines how message payloads are structured (types of message: HumanMessage, AIMessage, SystemMessage, ...)
-                                                    # A HumanMessage is a message that is passed in from a user to the model.
+from langchain_core.messages import HumanMessage, SystemMessage    # langchain_core.messages defines how message payloads are structured (types of message: HumanMessage, AIMessage, SystemMessage, ...)
+                                                                   # A HumanMessage is a message that is passed in from a user to the model.
+                                                                   # A SystemMessage is a message that is passed in from the system to the model, usually to provide context or instructions.
 from langgraph.graph import StateGraph, START, END  # StateGraph: Graph classs, START: special node (start of the graph), END: special node (end of the graph)
 from langgraph.graph.message import add_messages    # reducer: function that says to LangGraph how to update the msg list when a node returns a new message (sth) --> acumula en vez de reemplazar
 
@@ -73,8 +74,14 @@ class ToolAgent:
     
     def _llm_node(self, state: State) -> dict:          # all nodes recieve the full state as first argument 
         """Node that interacts with the language model, taking the current state and returning an updated state with the model's response."""
-        response = self._llm.invoke(state["messages"])  # returns AIMessage object with the model's response to the messages in the state: AIMessage(content="Glucose is...")
-        return {"messages": [response]}                 # and return a dictionary with the updated state
+        system_prompt = SystemMessage(content="""You are a biomedical research assistant.
+                                                You have access to two tools:
+                                                - search: use it when you need current or specific information you don't know
+                                                - calculator: use it for any arithmetic calculation
+                                                Always use tools when needed instead of guessing.""")
+        messages = [system_prompt] + state["messages"] 
+        response = self._llm.invoke(messages)  # returns AIMessage object with the model's response to the messages in the state: AIMessage(content="Glucose is...")
+        return {"messages": [response]}        # and return a dictionary with the updated state
 
     def invoke(self, user_message: str) -> str:
         """Invokes the agent with a user message and returns the model's response."""
